@@ -10,33 +10,6 @@ con();
 app.use(express.json());
 app.use('/api',router);
 
-
-// (async () => {
-//     await sequelize.sync(); 
-//     try {
-//         await Employee.create({
-//             firstName: 'Talha',
-//             lastName: 'Saeed',
-//             age: 45,
-//             department: 'dev_c',
-//         });
-//         console.log('Employee record created successfully.');
-//     } catch (error) {
-//         console.error('Error creating employee record:', error);
-//     }
-// })();
-
-// (async () => {
-//     await sequelize.sync();
-//     try {
-//         const records = await Employee.findAll();
-//         console.log('Records', records)
-//     }
-//     catch ( error ) {
-//         console.log('Error while fetching records', error)
-//     }
-// })();
-
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });

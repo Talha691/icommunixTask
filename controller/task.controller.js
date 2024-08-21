@@ -1,9 +1,15 @@
 const Tasks = require('../models/tasks.model');
+const { sequelize } = require('../config/db')
 
 const createTask= async (req, res) =>
 {
     try{
-        const{ title, description, status } = req.body;  
+        const{ title, description, status } = req.body; 
+        if( !title || !description || !status)
+        {
+            return res.status(400).json({message: 'Please fill all required fields'})
+        }
+        // await sequelize.sync(); 
         const task = await Tasks.create({title, description,status})
         if(task)
         {
@@ -27,11 +33,16 @@ const updateTask = async (req, res) =>
     {
         const { id } = req.params;
         const { title, description, status } = req.body;
+
+        if (!id) 
+        {
+            return res.status(400).json({ message: 'Task ID is required' });
+        }
         const updatedTask = await Tasks.update({ title, description, status }, {
             where: { id: id }})
         if( updateTask)
         {
-            res.status(201).json({message: 'Task updated Successfully...', data: updatedTask})
+            res.status(201).json({message: 'Task updated Successfully...'})
         }
         else
         {
