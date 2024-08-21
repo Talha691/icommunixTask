@@ -10,7 +10,7 @@ const createTask= async (req, res) =>
             return res.status(400).json({message: 'Please fill all required fields'})
         }
         // await sequelize.sync(); 
-        const task = await Tasks.create({title, description,status})
+        const task = await Tasks.create({ title, description, status })
         if(task)
         {
            res.status(201).json({message: 'Task Created', data: task})
