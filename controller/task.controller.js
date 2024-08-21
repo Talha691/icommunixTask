@@ -1,44 +1,89 @@
 const Tasks = require('../models/tasks.model');
-const { sequelize } = require('../config/db')
+const { sequelize } = require('../config/db');
+const { ValidationError } = require('sequelize')
 
-const createTask= async (req, res) =>
+// Create Task API
+const createTask = async (req, res) => 
 {
-    try{
-        const{ title, description, status } = req.body; 
-        if( !title || !description || !status)
+    try {
+        const { title, description, status, createdBy } = req.body;
+
+        // Check for extra fields in req.body
+        const allowedFields = ['title', 'description', 'status', 'createdBy'];
+        const extraFields = Object.keys(req.body).filter(key => !allowedFields.includes(key));
+
+        if (extraFields.length > 0) 
         {
-            return res.status(400).json({message: 'Please fill all required fields'})
+            return res.status(400).json({ message: `Field(s) ${extraFields.join(', ')} do not exist in schema` });
         }
-        // await sequelize.sync(); 
-        const task = await Tasks.create({ title, description, status })
-        if(task)
+
+        // Check for missing required fields
+        if (!title || !description || !status || !createdBy) 
         {
-           res.status(201).json({message: 'Task Created', data: task})
+            return res.status(400).json({ message: 'Please fill all required fields' });
         }
+
+        // Check if title already exists
+        const checkTitle = await Tasks.findOne({ where: { title } });
+        if (checkTitle) 
+        {
+            return res.status(400).json({ message: "Title already exists" });
+        }
+
+        // Create task
+        const task = await Tasks.create({ title, description, status, createdBy });
+        if (task) 
+        {
+            res.status(201).json({ message: 'Task Created', data: task });
+        } else {
+            res.status(500).json({ message: 'Task could not be created' });
+        }
+    } 
+    catch (error) 
+    {
+        if (error instanceof ValidationError) 
+        {
+            res.status(400).json({ message: error.errors[0].message });
+        } 
         else 
         {
-            res.send('Task can not Created...')
+            res.status(500).json({ message: error.message });
         }
     }
-    catch (error)
-    {
-        res.send(error)
-    }
-    
-}
+};
 
+// Update Task API
 const updateTask = async (req, res) => 
 {
     try
     {
         const { id } = req.params;
-        const { title, description, status } = req.body;
+        const { title, description, status, createdBy } = req.body;
+        const allowedFields = ['title', 'description', 'status', 'createdBy'];
+        const extraFields = Object.keys(req.body).filter(key => !allowedFields.includes(key));
 
+        // Check Extra Field Validation
+        if (extraFields.length > 0) 
+        {
+            return res.status(400).json({ message: `Field(s) ${extraFields.join(', ')} do not exist in schema` });
+        }
+        // Check ID
         if (!id) 
         {
             return res.status(400).json({ message: 'Task ID is required' });
         }
-        const updatedTask = await Tasks.update({ title, description, status }, {
+
+        if(title)
+        {
+            const checkTitle = await Tasks.findOne({ where: { title } });
+            if (checkTitle) 
+            {
+                return res.status(400).json({ message: "Title already exists" });
+            }
+        }
+
+        // Update Task
+        const updatedTask = await Tasks.update({ title, description, status, createdBy }, {
             where: { id: id }})
         if( updateTask)
         {
@@ -55,6 +100,7 @@ const updateTask = async (req, res) =>
     }
 }
 
+// Get All Tasks API
 const getTasks = async (req,res)=>
 {
     try
@@ -75,6 +121,7 @@ const getTasks = async (req,res)=>
     }
 }
 
+// Delete Task API
 const deleteTask = async (req, res) => {
     try {
         const { id } = req.params;
@@ -89,13 +136,16 @@ const deleteTask = async (req, res) => {
 
         if (deleted) {
             return res.status(200).json({ message: 'Task Deleted Successfully' });
-        } else {
+        } 
+        else 
+        {
             return res.status(404).json({ message: 'Task Not Found' });
         }
     } 
     catch (error) 
     {
-        if (!res.headersSent) {
+        if (!res.headersSent) 
+        {
             return res.status(500).json({ message: 'Error Deleting Task', error: error.message });
         }
     }

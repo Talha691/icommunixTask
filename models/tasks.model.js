@@ -1,4 +1,4 @@
-const { DataTypes } = require('sequelize');
+const { DataTypes  } = require('sequelize');
 const { sequelize } = require('../config/db')
 const Tasks = sequelize.define(
     'tasks',
@@ -13,7 +13,16 @@ const Tasks = sequelize.define(
         },
         status: {
             type: DataTypes.STRING,
-            allowNull: false, 
+            allowNull: false,
+        },
+        createdBy: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate: {
+                isEmail: {
+                    msg: "Please enter a valid email address"
+                }
+            }
         }
     }
 );
