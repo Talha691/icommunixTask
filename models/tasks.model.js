@@ -12,7 +12,7 @@ const Tasks = sequelize.define(
             allowNull: false,
         },
         status: {
-            type: DataTypes.STRING,
+            type: DataTypes.ENUM('completed', 'pending'),
             allowNull: false,
         },
         createdBy: {

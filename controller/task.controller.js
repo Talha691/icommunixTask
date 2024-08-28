@@ -1,5 +1,4 @@
 const Tasks = require('../models/tasks.model');
-const { sequelize } = require('../config/db');
 const { ValidationError } = require('sequelize')
 
 // Create Task API
@@ -22,14 +21,20 @@ const createTask = async (req, res) =>
         {
             return res.status(400).json({ message: 'Please fill all required fields' });
         }
-
+        
         // Check if title already exists
         const checkTitle = await Tasks.findOne({ where: { title } });
         if (checkTitle) 
         {
             return res.status(400).json({ message: "Title already exists" });
         }
-
+            
+        const validStatuses = ['completed', 'pending'];
+        if (!validStatuses.includes(status)) 
+        {
+            return res.status(400).json({ message: 'Status must be either "completed" or "pending"' });
+        }
+        
         // Create task
         const task = await Tasks.create({ title, description, status, createdBy });
         if (task) 
@@ -83,20 +88,33 @@ const updateTask = async (req, res) =>
         }
 
         // Update Task
-        const updatedTask = await Tasks.update({ title, description, status, createdBy }, {
-            where: { id: id }})
-        if( updateTask)
+        if( title || description || status || createdBy )
         {
-            res.status(201).json({message: 'Task updated Successfully...'})
+            const updatedTask = await Tasks.update({ title, description, status, createdBy }, { where: { id: id }})
+            if( updateTask)
+            {
+                res.status(201).json({message: 'Task updated Successfully...'})
+            }
+            else
+            {
+                res.send('Error while updating task...')
+            }
         }
         else
         {
-            res.send('Error while updating task...')
+            res.status(400).json({message: 'Please update atleast one entity'})
         }
     }
     catch(error)
     {
-        res.send(error)
+        if (error instanceof ValidationError) 
+            {
+                res.status(400).json({ message: error.errors[0].message });
+            } 
+        else
+        {
+            res.send(error)
+        }
     }
 }
 
